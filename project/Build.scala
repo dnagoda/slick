@@ -13,10 +13,10 @@ import de.johoop.testngplugin.TestNGPlugin._
 
 object SlickBuild extends Build {
 
-  val slickVersion = "3.1.1"
+  val slickVersion = "3.1.2-SNAPSHOT"
   val slickExtensionsVersion = "3.1.0" // Slick extensions version for links in the manual
   val binaryCompatSlickVersion = "3.1.0" // Slick base version for binary compatibility checks
-  val scalaVersions = Seq("2.10.5", "2.11.6")
+  val scalaVersions = Seq("2.11.6")
 
   /** Dependencies for reuse in different parts of the build */
   object Dependencies {
@@ -112,10 +112,16 @@ object SlickBuild extends Build {
     )),
     logBuffered := false,
     repoKind <<= (version)(v => if(v.trim.endsWith("SNAPSHOT")) "snapshots" else "releases"),
-    publishTo <<= (repoKind){
-      case "snapshots" => Some("snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
-      case "releases" =>  Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+    publishTo <<= version { (v: String) =>
+      val mtmaven = "https://maven.getmealticket.com/"
+      if (v.trim.endsWith("SNAPSHOT"))
+        Some("meal-ticket-snapshots" at mtmaven + "repository/snapshots")
+      else
+        Some("meal-ticket-releases"  at mtmaven + "repository/releases")
     },
+    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials-releases"),
+    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials-snapshots"),
+
     publishMavenStyle := true,
     publishArtifact in Test := false,
     pomIncludeRepository := { _ => false },
